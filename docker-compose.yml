@@ -1,17 +1,35 @@
 version: '3'
 
-volumes:
-  postgres_data:
-
 services:
-  postgres:
-    image: postgres:latest
-    restart: always
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DATABASE}
-    ports:
-      - "5432:5432"
+  api:
+    container_name: nestjs
+    image: nestjs-dev
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: dev
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - .:/app
+      - /app/node_modules
+    ports:
+      - 3000:3000
+    depends_on:
+      - postgres
+    command: npm run start:dev --watch
+
+  postgres:
+    image: docker.io/bitnami/postgresql:16
+    ports:
+      - '5432:5432'
+    volumes:
+      - 'postgresql_data:/bitnami/postgresql'
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+      - POSTGRESQL_DATABASE=postgres
+      - POSTGRESQL_USERNAME=postgres
+      - POSTGRESQL_PASSWORD=postgres@2024
+
+volumes:
+  postgresql_data:
+    driver: local
